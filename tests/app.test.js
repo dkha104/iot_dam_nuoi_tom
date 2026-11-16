@@ -1,0 +1,28 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {spawn} from 'node:child_process';
+import {once} from 'node:events';
+test('localhost API: CSRF, command idempotency, CSV, settings and model persistence',async()=>{
+ const child=spawn(process.execPath,['src/server.js','--port','3197'],{env:{...process.env,APP_MODE:'demo'},stdio:['ignore','pipe','pipe']});
+ let started=false;const ready=new Promise((resolve,reject)=>{const timeout=setTimeout(()=>reject(Error('Startup timeout')),10000);child.stdout.on('data',x=>{if(String(x).includes('http://localhost:3197')){started=true;clearTimeout(timeout);resolve();}});child.on('exit',code=>{if(!started)reject(Error('Server exit '+code));});});
+ const base='http://127.0.0.1:3197';
+ try{await ready;const s=await (await fetch(base+'/api/state')).json();assert.equal(s.mode,'demo');assert.equal(s.latest.ph.value,7.98);assert.ok(s.token);
+ const post=(path,b,token=s.token)=>fetch(base+path,{method:'POST',headers:{'Content-Type':'application/json','X-App-Token':token},body:JSON.stringify(b)});
+ assert.equal((await post('/api/commands',{},'bad')).status,403);
+ const b={method:'setPump',value:true,idempotencyKey:'integration-command-12345'};
+ const c=await (await post('/api/commands',b)).json();assert.equal(c.status,'acknowledged');const c2=await(await post('/api/commands',b)).json();assert.equal(c._id,c2._id);
+ const next=await(await fetch(base+'/api/state')).json();assert.equal(next.latest.pump.value,1);assert.equal(next.latest.auto.value,0);
+ assert.equal((await post('/api/commands',{...b,method:'unsafe'})).status,400);
+ assert.equal((await post('/api/models/train',{metric:'humidity'})).status,409);
+ const modelResponse=await post('/api/models/train',{metric:'temp'});assert.equal(modelResponse.status,201);const model=await modelResponse.json();assert.ok(model.validation.mae>=0);
+ const csv=await fetch(base+'/api/export?metric=ph');assert.match(await csv.text(),/observed_at,device_id/);
+ assert.equal((await fetch(base+'/api/export?metric=alerts')).status,400);
+ assert.equal((await post('/api/settings',{...s.settings,thresholds:{...s.settings.thresholds,phMin:9}})).status,400);
+ assert.equal((await post('/api/settings',{...s.settings,pondName:'Ao kiểm thử'})).status,200);
+ assert.equal((await post('/api/weather/refresh',{})).status,409);
+ assert.equal((await post('/api/camera/capture',{})).status,409);
+ assert.equal((await fetch(base+'/api/schema')).status,200);
+ assert.equal((await fetch(base+'/not-found')).status,404);
+ assert.equal((await fetch(base+'/api/state',{headers:{Origin:'https://evil.invalid','Sec-Fetch-Site':'cross-site'}})).status,403);
+ }finally{child.kill('SIGTERM');await once(child,'exit');}
+});
