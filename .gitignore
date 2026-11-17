@@ -3,3 +3,12 @@ node_modules/
 data/
 *.log
 .env.example
+
+# One-time UI migration scripts (keep locally, do not rerun)
+/scripts/upgrade-ui.py
+/scripts/refine-ui.py
+/scripts/finalize-ui.py
+/scripts/review-ui-fixes.py
+
+# Generated UI screenshots; retain Markdown reports
+/docs/ui-review/**/*.png
