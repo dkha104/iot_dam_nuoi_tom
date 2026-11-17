@@ -8,6 +8,7 @@ import {pipeline} from 'node:stream/promises';
 import {openStore,seedDemo} from './database.js';
 import {METRICS,measurement,candidates,validateSettings,trainBaseline} from './domain.js';
 import {ThingsBoard} from './thingsboard.js';
+import {groupMeasurementSessions, SESSION_GAP_MS, SESSION_LOOKBACK_MS, SESSION_POINT_LIMIT} from './sessions.js';
 
 const root=fileURLToPath(new URL('..',import.meta.url)), mode=process.env.APP_MODE||'demo';
 if(!['demo','live'].includes(mode))throw new Error('APP_MODE phải là demo hoặc live.');
@@ -72,6 +73,14 @@ const server=http.createServer(async(req,res)=>{
     if(req.headers['sec-fetch-site']==='cross-site')fail('Yêu cầu khác nguồn bị từ chối.',403);
     if(req.method!=='GET' && (req.headers['x-app-token']!==token || (req.headers.origin && req.headers.origin!==url.origin)))fail('Phiên thao tác không hợp lệ. Tải lại trang.',403);
     if(path==='/api/state'&&req.method==='GET')return json(res,200,await state());
+    if(path==='/api/sessions'&&req.method==='GET'){
+      const metric=url.searchParams.get('metric')||'temp';
+      if(!Object.hasOwn(METRICS,metric)||!METRICS[metric].forecast)fail('Chỉ số không hỗ trợ xem đợt đo.');
+      const end=Date.now(),start=end-SESSION_LOOKBACK_MS;
+      const times=await store.historyTimes(metric,start,end,SESSION_POINT_LIMIT);
+      return json(res,200,{metric,sessions:groupMeasurementSessions(times),gapMs:SESSION_GAP_MS,
+        lookbackDays:7,limit:SESSION_POINT_LIMIT,truncated:times.length===SESSION_POINT_LIMIT,now:new Date(end)});
+    }
     if(path==='/api/history'&&req.method==='GET'){
       const metric=url.searchParams.get('metric')||'temp';if(!Object.hasOwn(METRICS,metric))fail('Chỉ số không hợp lệ.');const{start,end}=range(url);
       const limit=Math.min(50000,Math.max(1,Number(url.searchParams.get('limit'))||2000));

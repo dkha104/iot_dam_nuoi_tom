@@ -5,6 +5,7 @@ Mọi route cùng origin, không bật CORS. GET `/api/state` trả token thao t
 | Method | Route | Ý nghĩa |
 | --- | --- | --- |
 | GET | `/api/state` | Chế độ, dữ liệu mới nhất, settings, trạng thái kết nối, lệnh, alert, ảnh, model |
+| GET | `/api/sessions?metric=temp` | Các đợt đo trong 7 ngày, ngắt khi gián đoạn >5 phút, tối đa 50.000 timestamp |
 | GET | `/api/history?metric=ph&start=...&end=...&limit=2000` | Khoảng start/end epoch ms, tối đa 31 ngày, limit tối đa 50.000; ASC |
 | GET | `/api/export?metric=ph&start=...&end=...` | CSV số liệu cảm biến, tối đa 50.000 điểm gần nhất trong khoảng; không export chuỗi alerts |
 | POST | `/api/sync` | Kéo dữ liệu ThingsBoard; 409 nếu worker đang chạy |

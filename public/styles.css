@@ -2,3 +2,18 @@
 /* Tăng độ tương phản của chữ nhỏ trên nền sáng. */
 .brand small{font-size:8px;letter-spacing:1.6px;white-space:nowrap}.subtitle,.top-date,.card-desc,.metric-top,.control-intro,.control-row small,.control-foot,.chart-footer,.event-item p,.event-time,.weather-mini p,.weather-mini-meta,.camera-bottom,.footer,.side-footer small,.device-note p,.metric-foot,.field small,.alert-content p,.alert-content small,.integration p,.panel p,.schema-item p,.small-stat small,.weather-hour small,.weather-hour p,.steps{color:#75836e}.eyebrow,.nav-caption{color:#79896f}.chart text{fill:#7c8873}.status-pill{color:#567641}.status-pill.neutral{color:#75806d}.metric-tabs button{color:#7c8972}.metric-value span{color:#8b9880}.empty-state,.empty-small{color:#798a6d}.panel p{font-size:12px}.card-desc,.metric-foot,.control-intro,.control-row small,.control-foot,.chart-footer,.event-item p,.event-time,.weather-mini-meta,.camera-bottom,.footer{font-size:10px}
 @media(max-width:1000px) and (min-width:721px){.control-card #control-rows{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr)}}
+
+/* Chỉ xem một đợt đo trên biểu đồ tổng quan. */
+.session-controls{display:flex;align-items:flex-end;gap:10px;padding:17px 22px 0;flex-wrap:wrap}
+.session-picker{display:flex;flex:1 1 230px;min-width:0;flex-direction:column;gap:6px;color:#75836e;font-size:10px}
+.session-picker select{width:100%;min-width:0;padding:8px 9px;background:#f8faf5;border:1px solid #dfe6d9;border-radius:7px;color:#48663d;font-size:10px;height:34px}
+.session-buttons{display:flex;gap:6px;align-items:center}
+.session-prev svg{transform:rotate(180deg)}
+.session-buttons button:disabled{cursor:default;opacity:.4}
+.session-range{margin:12px 22px 0;padding:10px 12px;background:#f1f6ed;border-radius:8px;display:flex;flex-wrap:wrap;gap:3px 10px;color:#738468;font-size:10px}
+.session-range strong{font-weight:600;color:#4d6d40}
+.session-range small{flex-basis:100%;font-size:9px;color:#7d8a74}
+.session-range.session-stale{background:#faf2e6}
+.session-range.session-stale strong{color:#a27b43}
+.session-range span{font-variant-numeric:tabular-nums}
+@media(max-width:720px){.session-controls{padding:14px 17px 0}.session-picker{flex-basis:100%}.session-buttons{margin-left:auto}.session-range{margin:10px 17px 0}.session-range span{flex-basis:100%}.chart-card .card-head{align-items:flex-start}.chart-tip{max-width:80%;white-space:normal}}
