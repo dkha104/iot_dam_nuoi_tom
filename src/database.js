@@ -50,6 +50,15 @@ export class Store {
     if(this.db)return (await this.db.collection('measurements').find({deviceId:'esp32-01',metric,observedAt:{$gte:new Date(start),$lte:new Date(end)}}).sort({observedAt:-1}).limit(limit).toArray()).reverse();
     return this.mem.measurements.filter(x=>x.metric===metric && +x.observedAt>=start && +x.observedAt<=end).sort((a,b)=>a.observedAt-b.observedAt).slice(-limit);
   }
+  async historyTimes(metric,start,end,limit=50000) {
+    if(this.db) {
+      const rows=await this.db.collection('measurements')
+        .find({deviceId:'esp32-01',metric,observedAt:{$gte:new Date(start),$lte:new Date(end)}},{projection:{_id:0,observedAt:1}})
+        .sort({observedAt:-1}).limit(limit).toArray();
+      return rows.reverse().map(row=>row.observedAt);
+    }
+    return (await this.history(metric,start,end,limit)).map(row=>row.observedAt);
+  }
   async cursor(metric) { if(this.db)return (await this.db.collection('ingestion_state').findOne({deviceId:'esp32-01',metric}))?.throughTs; return this.cursors[metric]; }
   async setCursor(metric,ts) { if(this.db) await this.db.collection('ingestion_state').updateOne({deviceId:'esp32-01',metric},{$set:{throughTs:ts,updatedAt:new Date()}},{upsert:true}); else this.cursors[metric]=ts; }
   async command(key) { return this.db ? this.db.collection('commands').findOne({idempotencyKey:key}) : this.mem.commands.find(x=>x.idempotencyKey===key); }

@@ -21,6 +21,13 @@ test('localhost API: CSRF, command idempotency, CSV, settings and model persiste
  assert.equal((await post('/api/settings',{...s.settings,pondName:'Ao kiểm thử'})).status,200);
  assert.equal((await post('/api/weather/refresh',{})).status,409);
  assert.equal((await post('/api/camera/capture',{})).status,409);
+ const sessionResponse=await fetch(base+'/api/sessions?metric=temp');assert.equal(sessionResponse.status,200);
+ const sessions=await sessionResponse.json();assert.equal(sessions.gapMs,300000);assert.ok(sessions.sessions.length>=1);
+ const last=sessions.sessions.at(-1);
+ const points=await(await fetch(base+`/api/history?metric=temp&start=${last.startTs}&end=${last.endTs}&limit=50000`)).json();
+ assert.equal(points.rows.length,last.count);assert.ok(points.rows.every(p=>+new Date(p.observedAt)>=last.startTs&&+new Date(p.observedAt)<=last.endTs));
+ assert.equal((await fetch(base+'/api/sessions?metric=humidity')).status,200);
+ assert.equal((await fetch(base+'/api/sessions?metric=alerts')).status,400);
  assert.equal((await fetch(base+'/api/schema')).status,200);
  assert.equal((await fetch(base+'/not-found')).status,404);
  assert.equal((await fetch(base+'/api/state',{headers:{Origin:'https://evil.invalid','Sec-Fetch-Site':'cross-site'}})).status,403);
